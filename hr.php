@@ -158,6 +158,7 @@
     </div>
     <label class="lblbtn"><b>REPORTS</b></label>
   <div class="btn-group">
+    <button onclick="document.getElementById('id12').style.display='block'"><b>DIVISION-WISE SORTING</b></button>
     <button onclick="document.getElementById('id11').style.display='block'"><b>DATE-WISE SORTING</b></button>
     <button onclick="document.getElementById('id10').style.display='block'"><b>EMPLOYEE-WISE SORTING</b></button>
     <button onclick="document.getElementById('id13').style.display='block'"><b>EXPENDITURE INCCURED ON COURSES</b></button>
@@ -1428,6 +1429,84 @@ $(document).ready(function(){
 </script>
 <!-- /Table Modal -->
 
+<!-- Division wise sorting modal -->
+<div class="w3-container">
+  <div id="id12" class="w3-modal">
+    <div class="w3-modal-content w3-card-4 w3-animate-zoom">
+      <header class="w3-container w3-drdo-blue"> 
+        <span onclick="document.getElementById('id12').style.display='none'" class="w3-button w3-drdo-blue w3-xlarge w3-display-topright">&times;</span>
+        <h2>Report</h2>
+      </header>
+      <div style="padding: 12px">
+        <h2>Division-wise Sorting</h2>
+        <p>The following is the representation of the division and applied employee data: </p>
+        <div id="piechart_3d" align="center"></div>
+          <?php 
+          $column_query = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'course_div'";
+          $column_res = mysqli_query($connection, $column_query) or die(mysqli_error($connection)); 
+          while ($row = mysqli_fetch_array($column_res)) {
+            $division_code[] = $row['COLUMN_NAME'];
+            $temp = $row['COLUMN_NAME'];
+            $count_query = "SELECT COUNT(*) FROM course_div WHERE $temp = 1";  
+            $count_res = mysqli_query($connection, $count_query) or die(mysqli_error($connection)); 
+            while ($col = mysqli_fetch_array($count_res)) {
+              $div_count[] = $col['COUNT(*)'];
+            }
+          }
+          ?>
+          <p>The following are the tabular details:</p>
+        <table border="0">
+          <tr>
+            <th>Division</th>
+            <th>Number of Employees</th> 
+          </tr>
+            <?php
+            for($i=2, $k=2; $i<=sizeof($division_code)-1; $i++, $k++){
+            echo "<tr><td>".$division_code[$i]."</td>
+            <td>".$div_count[$k]."</td></tr>";
+            }
+            ?>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+  var modal = document.getElementById('id12');
+  window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+    }
+  }
+</script>
+<script type="text/javascript" src="loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load("current", {packages:["corechart"]});
+      google.charts.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['Divisions', 'Number of Employees'],
+          <?php
+            for($i=2, $k=2; $i<=sizeof($division_code)-1; $i++, $k++){
+              echo "['".$division_code[$i]."',".$div_count[$k]."],";
+            }
+          ?>
+        ]);
+
+        var options = {
+          title: 'Division-wise Sorting',
+          chartArea:{width:"100%",height:"100%"},
+          width: 500,
+          height: 500,
+          is3D: true,
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('piechart_3d'));
+        chart.draw(data, options);
+      }
+    </script>
+<!-- /Division wise sorting modal -->
+
 <!-- Table Modal -->
 <div class="w3-container">
   <div id="id11" class="w3-modal">
@@ -1482,79 +1561,7 @@ $(document).ready(function(){
 </script>
 <!-- /Table Modal -->
 
-<!-- Table Modal -->
-<div class="w3-container">
-  <div id="id12" class="w3-modal">
-    <div class="w3-modal-content w3-card-4 w3-animate-zoom">
-      <header class="w3-container w3-drdo-blue"> 
-        <span onclick="document.getElementById('id12').style.display='none'" class="w3-button w3-drdo-blue w3-xlarge w3-display-topright">&times;</span>
-        <h2>Report</h2>
-      </header>
-      <div style="padding: 12px">
-        <h2>Analysis per Division</h2>
-        <p>The following are the details of employees who have applied for courses:</p>
-        <div class="row">
-            <div class="col-15">
-              <label for="cname">Course Name:</label>
-            </div>
-            <div class="col-85">
-              <input class="modal_text" type="text" id="coursename_modal" name="coursename_modal" placeholder="Enter the course name...">
-              <div id="autocom_name_modal"></div>
-            </div>
-            <br>
-          </div>
-            <input class="w3-button w3-black" type="submit" id="submit_modal" name="submit_modal">
-        <div id="chart_body"></div>
-      </div>
-    </div>
-  </div>
-</div>
-<script type="text/javascript">
-  $(document).ready(function(){  
-      $('#submit_modal').click(function(){  
-           var course_name = $('#coursename_modal').val();
-           $.ajax({  
-                url:"chart_make.php",  
-                method:"post",  
-                data:{course_name:course_name},  
-                success:function(data){  
-                     $('#chart_body').html(data);  
-                }  
-           });  
-      });  
-  }); 
-  $(document).ready(function(){
-  $('#coursename_modal').keyup(function(){
-    var name_query = $(this).val();
-    if (name_query!= '') {
-      $.ajax({  
-          url:"search.php",  
-          method:"post",  
-          data:{name_query:name_query},  
-          success:function(data){  
-            $('#autocom_name_modal').fadeIn();  
-            $('#autocom_name_modal').html(data);  
-          }  
-     });  
-    }
-    else{
-      $('#autocom_name_modal').fadeOut();  
-      $('#autocom_name_modal').html("");
-    }
-  });
-  $(document).on('click','#modal_course_name', function(){
-    $('#coursename_modal').val($(this).text());
-    $('#autocom_name_modal').fadeOut();
-  });
-});
-  var modal = document.getElementById('id12');
-  window.onclick = function(event) {
-  if (event.target == modal) {
-    modal.style.display = "none";
-    }
-  }
-</script>
-<!-- /Table Modal -->
+
 
 <!-- Table Modal -->
 <div class="w3-container">
